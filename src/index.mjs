@@ -128,12 +128,14 @@ app.patch("/api/users/:id",(request, response) => {
     // Be careful, if the patch request includes a misselled key, we will create an extra key in the final object, which is not good. Prevent with validation techniques. 
 })
 
-// app.delete("/api/users/:id", (request, response) => {
-//     const parsedID = parseInt(request.params.id)
-//     if (isNaN(parsedID)) return response.status(404).send(`Invalid ID`)
-//     const { params: {id} } = request
-//     const findUserIndex = mockUsers.findIndex((user) => user.id === parsedID)
-// })
+app.delete("/api/users/:id", (request, response) => {
+    const parsedID = parseInt(request.params.id)
+    if (isNaN(parsedID)) return response.status(404).send(`Invalid ID`)
+    const findUserIndex = mockUsers.findIndex((user) => user.id === parsedID)
+    if(findUserIndex === -1) return response.sendStatus(404)
+    mockUsers.splice(findUserIndex,1)
+    response.sendStatus(200)
+})
 
 // ----- START SERVER LISTENING TO THE PORT ----- //
 
