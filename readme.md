@@ -6,6 +6,8 @@
  - need to add two scripts in JSON: 
     1) start:dev -- starts with nodemon in dev 
     2) start -- starts without nodemon
+>npm init -y
+- he command npm init -y is used to quickly initialize a new Node.js project by creating a package.json file with default settings.
 
 ## gitIgnore ##
 
