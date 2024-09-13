@@ -11,13 +11,35 @@ app.use(express.json())
 // Lightweight: Built directly into express, eliminating the need for additional packages to handle JSON parsing.
 // Integration with Other Middleware: Can be used in conjunction with other middleware like express.urlencoded() for handling different content types.
 // replaces express body-parser module
-
-
 const PORT = process.env.PORT || 4001
 // process.env: An object in Node.js that contains the user environment variables.
 // process.env.PORT: Retrieves the value of the PORT environment variable if it's set.
 
-// ----- MODULES ----- //
+// ----- MIDDLEWEAR ----- //
+
+const resolveIndexUserByID = (request, response, next) => {
+    const { params: {id} } = request
+    const parsedID = parseInt(id)
+    if (isNaN(parsedID)) return response.status(404).send(`Invalid ID`)
+    const findUserIndex = mockUsers.findIndex((user) => user.id === parsedID)
+    if(findUserIndex === -1) return response.sendStatus(404)
+    request.findUserIndex = findUserIndex
+    next()
+}
+
+const loggingMiddleware = (request, response, next) => {
+    console.log(`${request.method} - ${request.url}`);
+    next();
+}
+
+app.use(loggingMiddleware) // enables the middleware globally. to enable for individual routes, pass in betweeten the route. E.g:
+// app.get("/api", loggingMiddleware, (request, response, next) => {
+//     response.status(200).send({
+//         msg1: "hello",
+//         msg2: "world"
+//     })    
+// }) 
+// must be registered BETWEEN app.use(express.json()) and routes
 
 // ----- MOCK DATA ----- //
 
@@ -30,8 +52,8 @@ let mockUsers = [
 ]
 let mockProducts = [
     {id: 1, name: "Taco powder", price: 5.99},
-    {id: 1, name: "Taco seasoning", price: 8.99},
-    {id: 1, name: "Taco shells", price: 12.99},
+    {id: 2, name: "Taco seasoning", price: 8.99},
+    {id: 3, name: "Taco shells", price: 12.99},
 ]
 // Params
 
@@ -75,14 +97,10 @@ app.get("/api/users",(request, response) => {
 
 // GET - request.PARAMS EXAMPLE //
 
-app.get("/api/users/:id", (request, response) => {
-    const parsedID = parseInt(request.params.id)
-    if (isNaN(parsedID)) return response.status(404).send(`Invalid ID`)
-    const findUser = mockUsers.find((element) => { 
-        return element.id === parsedID
-    })
-    if (!findUser) return response.status(404).send("Could not find user with submitted ID")
-    response.status(200).send(findUser)
+app.get("/api/users/:id", resolveIndexUserByID, (request,response) => {
+    const {findUserIndex} = request
+    if (!mockUsers[findUserIndex]) return response.status(404).send("Could not find user with submitted ID")
+    response.status(200).send(mockUsers[findUserIndex])
 })
 // ID is a param here with the identity "id", can be accessed via the params attribute. Params are used to filter lists, etc. Also used for sending data you don't want to display in the browser route. Params are used with GET requests
 // http://localhost:4001/api/users/1
@@ -103,36 +121,25 @@ app.post("/api/users",(request, response) => {
 
 // PUT EXAMPLE //
 
-app.put("/api/users/:id", (request, response) => {
-    // destructure the body so we can access its parameters (e.g. body.id, or body.userName) We can access id by simply referencing ID, which holds the URL parameter ID 
-    const parsedID = parseInt(request.params.id)
-    if (isNaN(parsedID)) return response.status(404).send(`Invalid ID`)
-    const { body, params: {id} } = request
-    const findUserIndex = mockUsers.findIndex((user) => user.id === parsedID)
-    if(findUserIndex === -1) return response.sendStatus(404)
-    mockUsers[findUserIndex] = {id: parsedID, ...body}
-    response.status(200).send(mockUsers[findUserIndex])
+app.put("/api/users/:id",resolveIndexUserByID, (request, response) => {
+    // destructure the body and split out findUserIndex so that we can spread the body, without passing in index as a parameter
+    const {body, findUserIndex} = request
+    mockUsers[findUserIndex] = {id: mockUsers[findUserIndex].id, ...body}
+    return response.status(200).send(mockUsers[findUserIndex])
 })
 // Put requests are used to completely replace a resource. When you send a put request, you're expected to send the entire updated object, even if you are only changing part of it 
 
 // PATCH EXAMPLE //
 
-app.patch("/api/users/:id",(request, response) => {
-    const parsedID = parseInt(request.params.id)
-    if (isNaN(parsedID)) return response.status(404).send(`Invalid ID`)
-    const { body, params: {id} } = request
-    const findUserIndex = mockUsers.findIndex((user) => user.id === parsedID)
-    // all of the key value pairs from mock users get put into a new object. THEN we take the request body, unpack it, and put it into the new object, overriding the current values when ID has same name
-    mockUsers[findUserIndex] = {...mockUsers[findUserIndex], ...body}
+app.patch("/api/users/:id",resolveIndexUserByID,(request, response) => {
+    const {body, findUserIndex} = request
+    mockUsers[findUserIndex] = {id: mockUsers[findUserIndex].id, ...body}
     response.status(200).send(mockUsers[findUserIndex])
-    // Be careful, if the patch request includes a misselled key, we will create an extra key in the final object, which is not good. Prevent with validation techniques. 
+    // Be careful, if the patch request includes a misspelled key, we will create an extra key in the final object, which is not good. Prevent with validation techniques. 
 })
 
-app.delete("/api/users/:id", (request, response) => {
-    const parsedID = parseInt(request.params.id)
-    if (isNaN(parsedID)) return response.status(404).send(`Invalid ID`)
-    const findUserIndex = mockUsers.findIndex((user) => user.id === parsedID)
-    if(findUserIndex === -1) return response.sendStatus(404)
+app.delete("/api/users/:id",resolveIndexUserByID, (request, response) => {
+    const {body, findUserIndex} = request
     mockUsers.splice(findUserIndex,1)
     response.sendStatus(200)
 })
