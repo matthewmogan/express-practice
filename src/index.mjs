@@ -5,18 +5,19 @@ import express from "express";
 import {query, body, validationResult, matchedData, checkSchema} from "express-validator"
 // used to validate query parameters
 import { createUserValidationSchema } from "./utils/validationSchemas.mjs";
+import usersRouter from "./routes/users.mjs"
+import { mockUsers, mockProducts } from "./utils/constants/constants.mjs";
 
 const app = express()
 // This application object, commonly assigned to a variable like app, serves as the central component of your web application and provides a range of methods to handle HTTP requests, set up middleware, and configure settings.
 app.use(express.json())
 // Automatic Parsing: Automatically parses JSON data in the request body and makes it available on request.body.
-// Error Handling: If the JSON is malformed, express.json() throws a 400 Bad request error, preventing the request from proceeding.
-// Lightweight: Built directly into express, eliminating the need for additional packages to handle JSON parsing.
-// Integration with Other Middleware: Can be used in conjunction with other middleware like express.urlencoded() for handling different content types.
-// replaces express body-parser module
+app.use(usersRouter)
 const PORT = process.env.PORT || 4001
 // process.env: An object in Node.js that contains the user environment variables.
 // process.env.PORT: Retrieves the value of the PORT environment variable if it's set.
+
+// ---- product data ---- //
 
 // ----- MIDDLEWEAR ----- //
 
@@ -35,35 +36,7 @@ const loggingMiddleware = (request, response, next) => {
     next();
 }
 
-app.use(loggingMiddleware) // enables the middleware globally. to enable for individual routes, pass in betweeten the route. E.g:
-// app.get("/api", loggingMiddleware, (request, response, next) => {
-//     response.status(200).send({
-//         msg1: "hello",
-//         msg2: "world"
-//     })    
-// }) 
-// must be registered BETWEEN app.use(express.json()) and routes
-
-// ----- MOCK DATA ----- //
-
-let mockUsers = [
-    {id: 1, userName: "matt", displayName: "m23232"},
-    {id: 2, userName: "bill", displayName: "mergrg32"},
-    {id: 3, userName: "timmo", displayName: "nhn34342"},
-    {id: 4, userName: "mxqkwos", displayName: "okiedjqw2"},
-
-]
-let mockProducts = [
-    {id: 1, name: "Taco powder", price: 5.99},
-    {id: 2, name: "Taco seasoning", price: 8.99},
-    {id: 3, name: "Taco shells", price: 12.99},
-]
-// Params
-
-// app.param("id",(request, response, next ) => {
-//     request.params.id = id
-//     next()
-// })
+app.use(loggingMiddleware) // enables the middleware globally. to enable for individual routes
 
 // ----- RESTFULL API ROUTES ----- //
 
@@ -83,29 +56,6 @@ app.get("/api/products", (request, response, next) => {
     return response.status(200).send(mockProducts)
 })
 // Get request to send an array of all products
-
-
-// GET - request.QUERY EXAMPLE //
-
-app.get(
-    "/api/users", 
-    (request, response) => {
-        const result = validationResult(request)
-        if (!result.isEmpty()) return response.status(400).send({errors: result.array()})
-        console.log(result)
-        const {
-            query: {filter, value}
-        } = request
-        if (filter && value) 
-            return response.send(
-                mockUsers.filter((user) => user[filter].includes(value))
-            )
-        return response.send(mockUsers)
-    }
-)
-// http://localhost:4001/api/users?filter=userName&value=m
-// http://localhost:4001/api/products/?key1=value1&key2=value2
-// Industry standard to prefix api routes with "API." If you are getting this data in your React code / app, you would go ahead and render this out to your users with something like a .map pattern
 
 // GET - request.PARAMS EXAMPLE //
 
