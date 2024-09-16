@@ -2,6 +2,9 @@
 
 import express from "express";
 // express is a top level finction, we need to call express to create the app
+import {query, body, validationResult, matchedData, checkSchema} from "express-validator"
+// used to validate query parameters
+import { createUserValidationSchema } from "./utils/validationSchemas.mjs";
 
 const app = express()
 // This application object, commonly assigned to a variable like app, serves as the central component of your web application and provides a range of methods to handle HTTP requests, set up middleware, and configure settings.
@@ -84,13 +87,22 @@ app.get("/api/products", (request, response, next) => {
 
 // GET - request.QUERY EXAMPLE //
 
-app.get("/api/users",(request, response) => {
-    // destructure the request.query into filter and value
-    const {query: {filter, value}} = request
-    // if no query, send mockUsers
-    if (!filter && !value) return response.send(mockUsers)
-    if (filter && value) return response.send(mockUsers.filter((user) => user[filter].toLowerCase().includes(value.toLowerCase())))
-})
+app.get(
+    "/api/users", 
+    (request, response) => {
+        const result = validationResult(request)
+        if (!result.isEmpty()) return response.status(400).send({errors: result.array()})
+        console.log(result)
+        const {
+            query: {filter, value}
+        } = request
+        if (filter && value) 
+            return response.send(
+                mockUsers.filter((user) => user[filter].includes(value))
+            )
+        return response.send(mockUsers)
+    }
+)
 // http://localhost:4001/api/users?filter=userName&value=m
 // http://localhost:4001/api/products/?key1=value1&key2=value2
 // Industry standard to prefix api routes with "API." If you are getting this data in your React code / app, you would go ahead and render this out to your users with something like a .map pattern
@@ -107,15 +119,18 @@ app.get("/api/users/:id", resolveIndexUserByID, (request,response) => {
     
 // POST EXAMPLE //
 
-app.post("/api/users",(request, response) => {
-    // destructure the body property of the request object, allowing us eo acceess all the properties of the body object. 
-    const {body} = request
-    const newUser = {
-        id: mockUsers[mockUsers.length-1].id+1, 
-        ...body
-    } // ... body spreads the contents of the request object into the newUser object
-    mockUsers.push(newUser)
-    return response.status(200).send(newUser)
+app.post("/api/users",
+    checkSchema(createUserValidationSchema),
+    (request, response) => {
+        const result = validationResult(request)
+        const data = matchedData(request) // only returns the data that has been validated by express validator 
+        if (!result.isEmpty()) return response.status(400).send({errors: result.array()})
+        const newUser = {
+            id: mockUsers[mockUsers.length-1].id+1, 
+            ...data
+        } // ... body spreads the contents of the request object into the newUser object
+        mockUsers.push(newUser)
+        return response.status(200).send(newUser)
 })
 // Create a new user and push into the user array. Needs app.use(express.json()) otherwise we won't be able to parse the body of the put request
 
