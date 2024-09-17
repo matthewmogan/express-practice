@@ -15,9 +15,9 @@ const router = Router()
 router.get(
     "/api/users", 
     (request, response) => {
+        console.log(request.sessionID)
         const result = validationResult(request)
         if (!result.isEmpty()) return response.status(400).send({errors: result.array()})
-        console.log(result)
         const {
             query: {filter, value}
         } = request
