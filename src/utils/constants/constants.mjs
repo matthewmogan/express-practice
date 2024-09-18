@@ -1,8 +1,8 @@
 export const mockUsers = [
-    {id: 1, userName: "thekid123", displayName: "Tam Brickson", password: "hello123"},
-    {id: 2, userName: "billballoon56", displayName: "Bill Sampson", password: "hellohello"},
-    {id: 3, userName: "torchertamber", displayName: "Gail McCormick", password: "hello453"},
-    {id: 4, userName: "stevenheaven", displayName: "Kris Koolson", password: "hel12332"}
+    {id: 1, username: "thekid123", displayname: "Tam Brickson", password: "hello123"},
+    {id: 2, username: "billballoon56", displayname: "Bill Sampson", password: "hellohello"},
+    {id: 3, username: "torchertamber", displayname: "Gail McCormick", password: "hello453"},
+    {id: 4, username: "stevenheaven", displayname: "Kris Koolson", password: "hel12332"}
 ]
 
 export const mockProducts = [

@@ -9,6 +9,9 @@
 >npm init -y
 - he command npm init -y is used to quickly initialize a new Node.js project by creating a package.json file with default settings.
 
+>npm i passport passport-local
+- command to install the passport management package (local strategy)
+
 ## gitIgnore ##
 
  > touch .gitignore

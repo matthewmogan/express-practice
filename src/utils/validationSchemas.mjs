@@ -1,5 +1,5 @@
 export const createUserValidationSchema = {
-    userName: {
+    username: {
         isLength: {
             options: {
                 min: 5,

@@ -28,7 +28,7 @@ router.get(
         return response.send(mockUsers)
     }
 )
-// http://localhost:4001/api/users?filter=userName&value=m
+// http://localhost:4001/api/users?filter=username&value=m
 // http://localhost:4001/api/products/?key1=value1&key2=value2
 // Industry standard to prefix api routes with "API." If you are getting this data in your React code / app, you would go ahead and render this out to your users with something like a .map pattern
 
