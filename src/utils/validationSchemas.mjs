@@ -1,4 +1,4 @@
-export const createUserValidationSchema = {
+export const userValidation = {
     username: {
         isLength: {
             options: {
@@ -14,6 +14,19 @@ export const createUserValidationSchema = {
             errorMessage: "USername must be a string"
         },
     },
+    displayname: {
+        notEmpty: {
+            errorMessage: "username cannot be empty"
+        }
+    },
+    password: {
+        notEmpty: {
+            errorMessage: "username cannot be empty"
+        }
+    }
+}
+
+export const updateUser = {
     displayname: {
         notEmpty: {
             errorMessage: "username cannot be empty"

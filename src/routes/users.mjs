@@ -1,8 +1,7 @@
 import { Router } from "express"
 import { validationResult, checkSchema, matchedData } from "express-validator"
-import { mockUsers } from "../utils/constants/constants.mjs"
-import { createUserValidationSchema } from "../utils/validationSchemas.mjs"
-import { resolveIndexUserByID, extractUsername } from "../utils/middleware/middleware.mjs"
+import { userValidation } from "../utils/validationSchemas.mjs"
+import { extractUsername } from "../utils/middleware/middleware.mjs"
 import { User } from "../mongoose/schemas/user.mjs"
 import { hashPassword } from "../utils/encryption.mjs"
 
@@ -27,7 +26,7 @@ router.get( "/api/users", async (request, response) => {
 // POST - CREATE USER with user specified in body
 // POST http://localhost:4001/api/users - with a JSON body that includes username, displayname, and password that pass the validation schema checks. This will create a new user and save it to the user database. However, this doesn't log the user into the session and authenticate. It just creates and saves the user credentials. Needs app.use(express.json()) otherwise we won't be able to parse the body of the put request
 
-router.post("/api/users", checkSchema(createUserValidationSchema), async (request, response) => {
+router.post("/api/users", checkSchema(userValidation), async (request, response) => {
     const result = validationResult(request) // grabs dynamic property that checkSchema added to the object
     if(!result.isEmpty()) return response.send(result.array()) // if not empty (meaning there are errors) we send back the results array full of errors
     const data = matchedData(request) // only returns the data that has been validated by express validator 
@@ -51,6 +50,7 @@ router.delete("/api/users/:username",extractUsername, async (request, response) 
 })
 
 // GET - request.PARAMS EXAMPLE //
+// http://localhost:4001/api/users/billballoon58 searches the User model for billballoon58 and returns the document that has billballoon58 saved as the username if it finds a match, returns status 404 if it can't find a match
 
 router.get("/api/users/:username", extractUsername, async (request,response) => {
     const {username} = request
@@ -58,27 +58,41 @@ router.get("/api/users/:username", extractUsername, async (request,response) => 
     if (!user) return response.status(404).send("Could not find user with submitted username")
     response.status(200).send(user)
 })
-// ID is a param here with the identity "id", can be accessed via the params attribute. Params are used to filter lists, etc. Also used for sending data you don't want to display in the browser route. Params are used with GET requests
-// http://localhost:4001/api/users/1
 
 // PUT EXAMPLE //
-
-router.put("/api/users/:id",resolveIndexUserByID, (request, response) => {
-    // destructure the body and split out findUserIndex so that we can spread the body, without passing in index as a parameter
-    const {body, findUserIndex} = request
-    mockUsers[findUserIndex] = {id: mockUsers[findUserIndex].id, ...body}
-    return response.status(200).send(mockUsers[findUserIndex])
-})
 // Put requests are used to completely replace a resource. When you send a put request, you're expected to send the entire updated object, even if you are only changing part of it 
 
-// PATCH EXAMPLE //
-
-router.patch("/api/users/:id",resolveIndexUserByID,(request, response) => {
-    const {body, findUserIndex} = request
-    mockUsers[findUserIndex] = {...mockUsers[findUserIndex], ...body}
-    response.status(200).send(mockUsers[findUserIndex])
-    // Be careful, if the patch request includes a misspelled key, we will create an extra key in the final object, which is not good. Prevent with validation techniques. 
+router.put("/api/users/:username", extractUsername, checkSchema(userValidation), async (request, response) => {
+    const result = validationResult(request) 
+    if(!result.isEmpty()) return response.send(result.array())
+    const data = matchedData(request)
+    data.password = hashPassword(data.password)
+    const newUser = {...data}
+    await User.findOneAndReplace({username: request.username}, {...newUser, username: request.body.username})
+    return response.sendStatus(200)
 })
 
+// PATCH EXAMPLE //
+// Update fields passed in in body, for the username specified in the params. runValidators = true pushes the updated fields through the validation schema in the model, and setting new to true tells the model to return the updated document, not the old document prior to the patch 
+
+router.patch("/api/users/:username", extractUsername, async (request, response) => {
+    const updates = request.body // extract an object with the key value pairs of all the updates from the body (password and display name)
+    console.log(request.body)
+    console.log(updates)
+    try {
+        const updatedUser = await User.findOneAndUpdate(
+            {username: request.username},
+            {$set: updates},
+            {new: true, runValidators: true}
+        );
+        if (!updatedUser) {
+            return response.status(404).send({ message: 'User not found' });
+        }
+        return response.status(200).send(updatedUser)
+    } catch (error) {
+        console.error('Error updating user:', error);
+        return response.status(500).send({ message: 'Internal server error' });
+    }
+})
 
 export default router
