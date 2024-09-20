@@ -1,4 +1,5 @@
 import { mockUsers } from "../constants/constants.mjs"
+import { User } from "../../mongoose/schemas/user.mjs"
 
 export const resolveIndexUserByID = (request, response, next) => {
     const { params: {id} } = request
@@ -7,6 +8,12 @@ export const resolveIndexUserByID = (request, response, next) => {
     const findUserIndex = mockUsers.findIndex((user) => user.id === parsedID)
     if(findUserIndex === -1) return response.sendStatus(404)
     request.findUserIndex = findUserIndex
+    next()
+}
+
+export const extractUsername = (request, response, next) => {
+    const { params: {username} } = request;
+    request.username = username
     next()
 }
 

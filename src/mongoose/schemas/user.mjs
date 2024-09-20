@@ -4,9 +4,9 @@ const UserSchema = new mongoose.Schema ({
     username: {
         type: mongoose.Schema.Types.String,
         required: true,
-        unique: true
+        unique: true // must be unique in the MongoDB database for Username
     },
-    displayName: {
+    displayname: {
         type: mongoose.Schema.Types.String,
         requried: true,
         unique: false
@@ -14,7 +14,8 @@ const UserSchema = new mongoose.Schema ({
     password: { 
         type: mongoose.Schema.Types.String,
         required: true,
-        unique: false
+        unique: false,
+        select: false
     }
 })
 
