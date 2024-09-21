@@ -23,7 +23,10 @@ passport.deserializeUser(async (id, done) => {
 
 const localStrategy = new Strategy(async (username, password, done) =>{
     try {
+        console.log(username)
+        console.log(password)
         const findUser = await User.findOne({username}) // find the user in the connected database using the User model's findOne method 
+        console.log(findUser)
         if(!findUser) throw new Error ("User not found") // error if no user found
         if(!comparePassword(password, findUser.password)) throw new Error("Bad Credentials") // if the passwords do not match throw an error
         done(null, findUser) // if they do match, call the done function with findUser as the parameter

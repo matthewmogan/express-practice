@@ -15,7 +15,6 @@ const UserSchema = new mongoose.Schema ({
         type: mongoose.Schema.Types.String,
         required: true,
         unique: false,
-        select: false
     }
 })
 
