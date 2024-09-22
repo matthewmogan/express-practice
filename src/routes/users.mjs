@@ -1,7 +1,7 @@
 import { Router } from "express"
 import { validationResult, checkSchema, matchedData } from "express-validator"
 import { userValidation } from "../utils/validationSchemas.mjs"
-import { extractUsername } from "../utils/middleware/middleware.mjs"
+import { extractUsername, logSessionStore } from "../utils/middleware/middleware.mjs"
 import { User } from "../mongoose/schemas/user.mjs"
 import { hashPassword } from "../utils/encryption.mjs"
 
@@ -12,7 +12,7 @@ const router = Router()
 // GET http://localhost:4001/api/users - this will return all users 
 // Industry standard to prefix api routes with "API." If you are getting this data in your React code / app, you would go ahead and render this out to your users with something like a .map pattern
 
-router.get( "/api/users", async (request, response) => {
+router.get( "/api/users" ,logSessionStore, async (request, response) => {
     const { query: {usernameIncludes} } = request
     if (usernameIncludes) {
         const search = RegExp(usernameIncludes) // create a regular expression to search for strings that include username

@@ -19,3 +19,15 @@ export const loggingMiddleware = (request, response, next) => {
     console.log(`${request.method} - ${request.url}`);
     next();
 }
+
+export const logSessionStore = (request, response, next) => {
+    request.sessionStore.get(request.session.id, (error, sessionData) =>{
+        if (error) {
+            console.log(err);
+            throw err;
+        }
+        console.log("Inside Session Store Get");
+        console.log(sessionData)
+    })
+    next()
+}

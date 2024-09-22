@@ -18,7 +18,7 @@ router.post('/api/cart', async (request, response) => {
         if (cart) {
             cart.push(item); // if cart does exist, we push item into the cart
         } else {
-            request.session.cart = [...item, "quantity": 1] // if cart does not exist, we instantiate cart, and set it equal to an array with items
+            request.session.cart = [item] // if cart does not exist, we instantiate cart, and set it equal to an array with items
         }
         return response.status(201).send(request.session.cart)
     } catch(error) {
