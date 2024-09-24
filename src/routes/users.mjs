@@ -4,6 +4,7 @@ import { userValidation } from "../utils/validationSchemas.mjs"
 import { extractUsername, logSessionStore } from "../utils/middleware/middleware.mjs"
 import { User } from "../mongoose/schemas/user.mjs"
 import { hashPassword } from "../utils/encryption.mjs"
+import { getUserByUsername, createUser } from "../handlers/users.mjs"
 
 const router = Router()
 
@@ -26,20 +27,7 @@ router.get( "/api/users" ,logSessionStore, async (request, response) => {
 // POST - CREATE USER with user specified in body
 // POST http://localhost:4001/api/users - with a JSON body that includes username, displayname, and password that pass the validation schema checks. This will create a new user and save it to the user database. However, this doesn't log the user into the session and authenticate. It just creates and saves the user credentials. Needs app.use(express.json()) otherwise we won't be able to parse the body of the put request
 
-router.post("/api/users", checkSchema(userValidation), async (request, response) => {
-    const result = validationResult(request) // grabs dynamic property that checkSchema added to the object
-    if(!result.isEmpty()) return response.send(result.array()) // if not empty (meaning there are errors) we send back the results array full of errors
-    const data = matchedData(request) // only returns the data that has been validated by express validator 
-    data.password = hashPassword(data.password) // hash the password
-    const newUser = new User(data) // creates a new instance of the User model, which represents a single document that will be stored in the MongoDB users collection.
-    try {
-        const savedUser = await newUser.save() 
-        return response.status(201).send(savedUser)
-    } catch (err) {
-        console.log(err)
-        return response.sendStatus(400)
-    }
-})
+router.post("/api/users", checkSchema(userValidation), createUser)
 
 // DELETE A USER by USERNAME
 // http://localhost:4001/api/users searches for a user with the exact username in the database, then deletes that user from the User model
@@ -52,12 +40,7 @@ router.delete("/api/users/:username",extractUsername, async (request, response) 
 // GET - request.PARAMS EXAMPLE //
 // http://localhost:4001/api/users/billballoon58 searches the User model for billballoon58 and returns the document that has billballoon58 saved as the username if it finds a match, returns status 404 if it can't find a match
 
-router.get("/api/users/:username", extractUsername, async (request,response) => {
-    const {username} = request
-    const user = await User.findOne({username: username})
-    if (!user) return response.status(404).send("Could not find user with submitted username")
-    response.status(200).send(user)
-})
+router.get("/api/users/:username", extractUsername, getUserByUsername)
 
 // PUT EXAMPLE //
 // Put requests are used to completely replace a resource. When you send a put request, you're expected to send the entire updated object, even if you are only changing part of it 
